@@ -3,108 +3,328 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Chemical Cost Calculator</title>
+  <meta name="theme-color" content="#4CAF50" />
+  <link rel="manifest" href="manifest.json" />
+  <title>Softwash Mix Calculator</title>
   <style>
     body {
       font-family: sans-serif;
-      max-width: 600px;
-      margin: 0 auto;
-      padding: 2rem;
-    }
-    input, select, button {
-      display: block;
-      margin-bottom: 1rem;
-      padding: 0.5rem;
-      width: 100%;
-    }
-    .result {
-      background: #f4f4f4;
+      max-width: 500px;
+      margin: auto;
       padding: 1rem;
-      border-radius: 5px;
+      background: #f0f0f0;
+    }
+    h1, h2 {
+      text-align: center;
+      color: #333;
+    }
+    label {
+      font-weight: bold;
+      display: block;
+      margin-top: 1rem;
+    }
+    input {
+      width: 100%;
+      padding: 8px;
+      margin-top: 4px;
+    }
+    button {
+      margin-top: 1.5rem;
+      width: 100%;
+      padding: 10px;
+      font-size: 16px;
+    }
+    #adjust-section {
+      display: none;
+      margin-top: 1rem;
+      padding: 10px;
+      background: #eef;
+      border-radius: 8px;
+    }
+    .output, .log, .cost {
+      margin-top: 2rem;
+      padding: 1rem;
+      background: #d4f4d4;
+      border-radius: 8px;
+      font-weight: bold;
+      white-space: pre-wrap;
+    }
+    .cost {
+      background: #fff3e0;
+    }
+    nav {
+      text-align: center;
+      margin-bottom: 1rem;
+      display: flex;
+      justify-content: space-around;
+      gap: 10px;
+    }
+    nav button {
+      padding: 10px 15px;
+      font-size: 16px;
+      flex: 1;
+    }
+    .settings-page {
+      display: none;
+      padding: 1rem;
+      background: #fff;
+      border-radius: 8px;
+      max-width: 400px;
+      margin: auto;
+    }
+    .save-btn {
+      display: none;
+    }
+    .checkbox-container {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-top: 1rem;
+    }
+    .checkbox-container label {
+      margin-left: 10px;
     }
   </style>
 </head>
 <body>
+  <nav>
+    <button onclick="showPage('calc')">Mix Calculator</button>
+    <button onclick="showPage('log')">Log</button>
+    <button onclick="showPage('cost')">Cost Calculator</button>
+    <button onclick="showSettingsPage()">Settings</button>
+  </nav>
 
-  <h2>Chemical Cost Calculator</h2>
+  <!-- Settings Page -->
+  <div id="settingsPage" class="settings-page">
+    <h2>Settings</h2>
+    <label for="shDrumSize">SH Drum Size (L):</label>
+    <input type="number" id="shDrumSize" value="200" />
+    <label for="shDrumPrice">Price per SH Drum ($):</label>
+    <input type="number" id="shDrumPrice" value="120" />
 
-  <label>Total Mix Size (L)</label>
-  <input type="number" id="mixSize" value="75">
+    <label for="surfDrumSize">Surfactant Drum Size (L):</label>
+    <input type="number" id="surfDrumSize" value="50" />
+    <label for="surfDrumPrice">Price per Surfactant Drum ($):</label>
+    <input type="number" id="surfDrumPrice" value="80" />
 
-  <label>SH Ratio (%)</label>
-  <input type="number" id="shRatio" value="50">
+    <label for="scentDrumSize">Scent Drum Size (L):</label>
+    <input type="number" id="scentDrumSize" value="25" />
+    <label for="scentDrumPrice">Price per Scent Drum ($):</label>
+    <input type="number" id="scentDrumPrice" value="60" />
 
-  <label>Surfactant Ratio (%)</label>
-  <input type="number" id="surfRatio" value="1">
+    <button onclick="saveSettings()">Save Settings</button>
+    <button onclick="closeSettingsPage()">Close</button>
+  </div>
 
-  <label>Scent (ml)</label>
-  <input type="number" id="scentMl" value="50">
+  <!-- Calculator Page -->
+  <div id="calcPage">
+    <h1>Softwash Mix Calculator</h1>
 
-  <hr/>
+    <label>Batch size (L):</label>
+    <input type="number" id="batchSize" placeholder="e.g. 100" />
 
-  <label>SH Drum Size (L)</label>
-  <input type="number" id="shDrumSize" value="20">
+    <label>Target mix strength (%):</label>
+    <input type="number" step="0.1" id="targetMix" placeholder="e.g. 3.5" />
 
-  <label>SH Drum Price ($)</label>
-  <input type="number" id="shDrumPrice" value="70">
+    <label>SH drum strength (%):</label>
+    <input type="number" step="0.1" id="shStrength" value="12.5" />
 
-  <label>Surfactant Drum Size (L)</label>
-  <input type="number" id="surfDrumSize" value="20">
+    <label>Surfactant ratio (e.g. 1:75):</label>
+    <input type="text" id="surfactantRatio" placeholder="e.g. 1:75" />
 
-  <label>Surfactant Drum Price ($)</label>
-  <input type="number" id="surfDrumPrice" value="190">
+    <label>Scent ratio (e.g. 1:100):</label>
+    <input type="text" id="scentRatio" placeholder="e.g. 1:100" />
 
-  <label>Scent Drum Size (L)</label>
-  <input type="number" id="scentDrumSize" value="25">
+    <div class="checkbox-container">
+      <input type="checkbox" id="adjustToggle" />
+      <label for="adjustToggle">Existing Mix</label>
+    </div>
 
-  <label>Scent Drum Price ($)</label>
-  <input type="number" id="scentDrumPrice" value="60">
+    <div id="adjust-section">
+      <label>Current volume in tank (L):</label>
+      <input type="number" id="currentVolume" />
+      <label>Current mix strength (%):</label>
+      <input type="number" step="0.1" id="currentStrength" />
+    </div>
 
-  <button onclick="calculate()">Calculate</button>
+    <button onclick="calculateMix()">Calculate Mix</button>
 
-  <div class="result" id="result"></div>
+    <div class="output" id="resultOutput"></div>
+    <button class="save-btn" id="saveLogBtn" onclick="promptSaveLog()">Save to Log</button>
+  </div>
+
+  <!-- Log Page -->
+  <div id="logPage" style="display:none;">
+    <h2>Saved Logs</h2>
+    <div class="log" id="logOutput"></div>
+    <button onclick="clearLog()">Clear Log</button>
+  </div>
+
+  <!-- Cost Calculator Page -->
+  <div id="costPage" style="display:none;">
+    <h1>Cost Calculator</h1>
+    <div id="costResult" class="cost"></div>
+    <button onclick="saveCostToLog()">Save Cost to Log</button>
+  </div>
 
   <script>
-    function calculate() {
-      const mixSize = parseFloat(document.getElementById('mixSize').value);
-      const shRatio = parseFloat(document.getElementById('shRatio').value);
-      const surfRatio = parseFloat(document.getElementById('surfRatio').value);
-      const scentMl = parseFloat(document.getElementById('scentMl').value);
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.register('sw.js');
+    }
 
-      const shDrumSize = parseFloat(document.getElementById('shDrumSize').value);
-      const shDrumPrice = parseFloat(document.getElementById('shDrumPrice').value);
+    const adjustToggle = document.getElementById('adjustToggle');
+    const adjustSection = document.getElementById('adjust-section');
 
-      const surfDrumSize = parseFloat(document.getElementById('surfDrumSize').value);
-      const surfDrumPrice = parseFloat(document.getElementById('surfDrumPrice').value);
+    adjustToggle.addEventListener('change', () => {
+      adjustSection.style.display = adjustToggle.checked ? 'block' : 'none';
+    });
 
-      const scentDrumSize = parseFloat(document.getElementById('scentDrumSize').value);
-      const scentDrumPrice = parseFloat(document.getElementById('scentDrumPrice').value);
+    function showPage(page) {
+      document.getElementById('calcPage').style.display = page === 'calc' ? 'block' : 'none';
+      document.getElementById('logPage').style.display = page === 'log' ? 'block' : 'none';
+      document.getElementById('costPage').style.display = page === 'cost' ? 'block' : 'none';
+      if (page === 'log') displayLog();
+    }
 
-      // Chemical volumes in mL
-      const shVolume = mixSize * (shRatio / 100) * 1000;
-      const surfVolume = mixSize * (surfRatio / 100) * 1000;
+    function showSettingsPage() {
+      document.getElementById('settingsPage').style.display = 'block';
+    }
 
-      // Per-litre prices
-      const shPerLitre = shDrumPrice / shDrumSize;
-      const surfPerLitre = surfDrumPrice / surfDrumSize;
-      const scentPerLitre = scentDrumPrice / scentDrumSize;
+    function closeSettingsPage() {
+      document.getElementById('settingsPage').style.display = 'none';
+    }
 
-      // Costs
-      const costSH = (shVolume / 1000) * shPerLitre;
-      const costSurf = (surfVolume / 1000) * surfPerLitre;
-      const costScent = (scentMl / 1000) * scentPerLitre;
+    function saveSettings() {
+      const keys = ['shDrumSize','shDrumPrice','surfDrumSize','surfDrumPrice','scentDrumSize','scentDrumPrice'];
+      keys.forEach(id => localStorage.setItem(id, document.getElementById(id).value));
+      alert('Settings saved');
+      closeSettingsPage();
+    }
+
+    function parseRatio(input) {
+      if (!input) return 0;
+      const parts = input.split(':');
+      if (parts.length !== 2) return null;
+      const numerator = parseFloat(parts[0]);
+      const denominator = parseFloat(parts[1]);
+      if (isNaN(numerator) || isNaN(denominator) || denominator === 0) return null;
+      return numerator / denominator;
+    }
+
+    let lastResult = {};
+
+    function calculateMix() {
+      const batchSize = parseFloat(document.getElementById('batchSize').value);
+      const targetMix = parseFloat(document.getElementById('targetMix').value);
+      const shStrength = parseFloat(document.getElementById('shStrength').value || "12.5");
+      const surfRatioInput = document.getElementById('surfactantRatio').value;
+      const scentRatioInput = document.getElementById('scentRatio').value;
+      const resultDiv = document.getElementById('resultOutput');
+      const saveLogBtn = document.getElementById('saveLogBtn');
+
+      const surfRatio = parseRatio(surfRatioInput);
+      const scentRatio = scentRatioInput ? parseRatio(scentRatioInput) : 0;
+
+      if (surfRatio === null) {
+        resultDiv.innerText = "⚠️ Invalid surfactant ratio. Use format like 1:75.";
+        return;
+      }
+      if (scentRatioInput && scentRatio === null) {
+        resultDiv.innerText = "⚠️ Invalid scent ratio. Use format like 1:100.";
+        return;
+      }
+
+      if (adjustToggle.checked) {
+        const V1 = parseFloat(document.getElementById('currentVolume').value);
+        const C1 = parseFloat(document.getElementById('currentStrength').value);
+        const Ct = targetMix;
+        const C2 = shStrength;
+        const Vtotal = batchSize;
+
+        if (Ct >= C2 || isNaN(V1) || isNaN(C1) || isNaN(Vtotal)) {
+          resultDiv.innerText = "⚠️ Invalid adjustment input.";
+          return;
+        }
+
+        const V2 = Vtotal - V1;
+        const SH_total = (Ct / 100) * Vtotal;
+        const SH_existing = (C1 / 100) * V1;
+        const SH_needed = SH_total - SH_existing;
+        const shToAdd = SH_needed / (C2 / 100);
+        const waterToAdd = V2 - shToAdd;
+        const surfToAdd = V2 * surfRatio * 1000;
+        const scentToAdd = V2 * scentRatio * 1000;
+
+        lastResult = {
+          SH: shToAdd.toFixed(2),
+          water: waterToAdd.toFixed(2),
+          surfactant: surfToAdd.toFixed(0),
+          scent: scentToAdd.toFixed(0),
+          totalVolume: Vtotal.toFixed(1),
+          totalMixStrength: Ct.toFixed(1)
+        };
+      } else {
+        const shRequired = (targetMix / shStrength) * batchSize;
+        const waterRequired = batchSize - shRequired;
+        const surfactantRequired = batchSize * surfRatio * 1000;
+        const scentRequired = batchSize * scentRatio * 1000;
+
+        lastResult = {
+          SH: shRequired.toFixed(2),
+          water: waterRequired.toFixed(2),
+          surfactant: surfactantRequired.toFixed(0),
+          scent: scentRequired.toFixed(0),
+          totalVolume: batchSize.toFixed(1),
+          totalMixStrength: targetMix.toFixed(1)
+        };
+      }
+
+      resultDiv.innerText = `Mix Ready:\n• SH: ${lastResult.SH} L\n• Water: ${lastResult.water} L\n• Surfactant: ${lastResult.surfactant} mL` +
+        (scentRatio > 0 ? `\n• Scent: ${lastResult.scent} mL` : '') +
+        `\n📦 Final volume: ${lastResult.totalVolume} L at ${lastResult.totalMixStrength}%`;
+
+      saveLogBtn.style.display = 'block';
+    }
+
+    function saveCostToLog() {
+      const shCostPerLitre = parseFloat(localStorage.getItem('shDrumPrice')) / parseFloat(localStorage.getItem('shDrumSize'));
+      const surfCostPerLitre = parseFloat(localStorage.getItem('surfDrumPrice')) / parseFloat(localStorage.getItem('surfDrumSize'));
+      const scentCostPerLitre = parseFloat(localStorage.getItem('scentDrumPrice')) / parseFloat(localStorage.getItem('scentDrumSize'));
+
+      const costSH = parseFloat(lastResult.SH) * 1000 / 1000 * shCostPerLitre;
+      const costSurf = parseFloat(lastResult.surfactant) / 1000 * surfCostPerLitre;
+      const costScent = parseFloat(lastResult.scent || 0) / 1000 * scentCostPerLitre;
 
       const totalCost = costSH + costSurf + costScent;
 
-      document.getElementById('result').innerHTML = `
-        <strong>Results for ${mixSize}L Mix</strong><br><br>
-        SH Used: ${(shVolume / 1000).toFixed(2)} L — Cost: $${costSH.toFixed(2)}<br>
-        Surfactant Used: ${(surfVolume / 1000).toFixed(2)} L — Cost: $${costSurf.toFixed(2)}<br>
-        Scent Used: ${(scentMl / 1000).toFixed(2)} L — Cost: $${costScent.toFixed(2)}<br>
-        <br><strong>Total Cost: $${totalCost.toFixed(2)}</strong>
+      document.getElementById('costResult').innerHTML = `
+        <h2>Cost Breakdown:</h2>
+        <p>• SH: $${costSH.toFixed(2)}</p>
+        <p>• Surfactant: $${costSurf.toFixed(2)}</p>
+        <p>• Scent: $${costScent.toFixed(2)}</p>
+        <hr />
+        <p><strong>Total Cost: $${totalCost.toFixed(2)}</strong></p>
       `;
     }
-  </script>
 
+    function displayLog() {
+      const logs = JSON.parse(localStorage.getItem('softwashLogs') || '[]');
+      document.getElementById('logOutput').innerText = logs.join('\n\n');
+    }
+
+    function clearLog() {
+      if (confirm("Clear all logs?")) {
+        localStorage.removeItem('softwashLogs');
+        displayLog();
+      }
+    }
+
+    function promptSaveLog() {
+      const logs = JSON.parse(localStorage.getItem('softwashLogs') || '[]');
+      logs.push(`Mix: SH=${lastResult.SH}L, Water=${lastResult.water}L, Surfactant=${lastResult.surfactant}mL, Scent=${lastResult.scent || 0}mL, Volume=${lastResult.totalVolume}L @ ${lastResult.totalMixStrength}%`);
+      localStorage.setItem('softwashLogs', JSON.stringify(logs));
+      alert('Mix saved to log');
+    }
+  </script>
 </body>
 </html>
