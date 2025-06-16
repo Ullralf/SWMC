@@ -96,17 +96,15 @@
 
       const totalCost = costSH + costSurf + costScent;
 
-      document.getElementById('result').innerHTML = 
+      document.getElementById('result').innerHTML = `
         <strong>Results for ${mixSize}L Mix</strong><br><br>
         SH Used: ${(shVolume / 1000).toFixed(2)} L — Cost: $${costSH.toFixed(2)}<br>
         Surfactant Used: ${(surfVolume / 1000).toFixed(2)} L — Cost: $${costSurf.toFixed(2)}<br>
         Scent Used: ${(scentMl / 1000).toFixed(2)} L — Cost: $${costScent.toFixed(2)}<br>
         <br><strong>Total Cost: $${totalCost.toFixed(2)}</strong>
-      ;
+      `;
     }
   </script>
 
 </body>
 </html>
-
-
