@@ -91,4 +91,243 @@
     <button onclick="showPage('calc')">Mix Calculator</button>
     <button onclick="showPage('log')">Log</button>
     <button onclick="showPage('cost')">Cost Calculator</button>
-    <button onclick
+    <button onclick="showSettingsPage()">Settings</button>
+  </nav>
+
+  <!-- Settings Page -->
+  <div id="settingsPage" class="settings-page">
+    <h2>Settings</h2>
+    <label for="shDrumSize">SH Drum Size (L):</label>
+    <input type="number" id="shDrumSize" value="200" />
+    
+    <label for="shDrumPrice">Price per SH Drum ($):</label>
+    <input type="number" id="shDrumPrice" value="120" />
+
+    <label for="surfDrumSize">Surfactant Drum Size (L):</label>
+    <input type="number" id="surfDrumSize" value="50" />
+    
+    <label for="surfDrumPrice">Price per Surfactant Drum ($):</label>
+    <input type="number" id="surfDrumPrice" value="80" />
+
+    <label for="scentDrumSize">Scent Drum Size (L):</label>
+    <input type="number" id="scentDrumSize" value="25" />
+    
+    <label for="scentDrumPrice">Price per Scent Drum ($):</label>
+    <input type="number" id="scentDrumPrice" value="60" />
+
+    <button onclick="saveSettings()">Save Settings</button>
+    <button onclick="closeSettingsPage()">Close</button>
+  </div>
+
+  <!-- Calculator Page -->
+  <div id="calcPage">
+    <h1>Softwash Mix Calculator</h1>
+
+    <label>Batch size (L):</label> <!-- Changed from "Tank size" to "Batch size" -->
+    <input type="number" id="batchSize" placeholder="e.g. 100" />
+
+    <label>Target mix strength (%):</label>
+    <input type="number" step="0.1" id="targetMix" placeholder="e.g. 3.5" />
+
+    <label>SH drum strength (%):</label>
+    <input type="number" step="0.1" id="shStrength" value="12.5" />
+
+    <label>Surfactant ratio (e.g. 1:75):</label>
+    <input type="text" id="surfactantRatio" placeholder="e.g. 1:75" />
+
+    <label>Scent ratio (e.g. 1:100):</label>
+    <input type="text" id="scentRatio" placeholder="e.g. 1:100" />
+
+    <div class="checkbox-container">
+      <input type="checkbox" id="adjustToggle" />
+      <label for="adjustToggle">Existing Mix</label>
+    </div>
+
+    <div id="adjust-section">
+      <label>Current volume in tank (L):</label>
+      <input type="number" id="currentVolume" />
+
+      <label>Current mix strength (%):</label>
+      <input type="number" step="0.1" id="currentStrength" />
+    </div>
+
+    <button onclick="calculateMix()">Calculate Mix</button>
+
+    <div class="output" id="resultOutput"></div>
+
+    <button class="save-btn" id="saveLogBtn" onclick="promptSaveLog()">Save to Log</button>
+  </div>
+
+  <!-- Log Page -->
+  <div id="logPage" style="display:none;">
+    <h2>Saved Logs</h2>
+    <div class="log" id="logOutput"></div>
+    <button onclick="clearLog()">Clear Log</button>
+  </div>
+
+  <!-- Cost Calculator Page -->
+  <div id="costPage" style="display:none;">
+    <h1>Cost Calculator</h1>
+
+    <div id="costResult" class="cost">
+      <!-- Display cost results here -->
+    </div>
+
+    <button onclick="saveCostToLog()">Save Cost to Log</button>
+  </div>
+
+  <script>
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.register('sw.js');
+    }
+
+    const adjustToggle = document.getElementById('adjustToggle');
+    const adjustSection = document.getElementById('adjust-section');
+
+    adjustToggle.addEventListener('change', () => {
+      adjustSection.style.display = adjustToggle.checked ? 'block' : 'none';
+    });
+
+    function showPage(page) {
+      document.getElementById('calcPage').style.display = page === 'calc' ? 'block' : 'none';
+      document.getElementById('logPage').style.display = page === 'log' ? 'block' : 'none';
+      document.getElementById('costPage').style.display = page === 'cost' ? 'block' : 'none'; // Show the cost calculator page
+
+      if (page === 'log') displayLog();
+    }
+
+    function showSettingsPage() {
+      document.getElementById('settingsPage').style.display = 'block';
+    }
+
+    function closeSettingsPage() {
+      document.getElementById('settingsPage').style.display = 'none';
+    }
+
+    function saveSettings() {
+      const shDrumSize = document.getElementById('shDrumSize').value;
+      const shDrumPrice = document.getElementById('shDrumPrice').value;
+      const surfDrumSize = document.getElementById('surfDrumSize').value;
+      const surfDrumPrice = document.getElementById('surfDrumPrice').value;
+      const scentDrumSize = document.getElementById('scentDrumSize').value;
+      const scentDrumPrice = document.getElementById('scentDrumPrice').value;
+
+      localStorage.setItem('shDrumSize', shDrumSize);
+      localStorage.setItem('shDrumPrice', shDrumPrice);
+      localStorage.setItem('surfDrumSize', surfDrumSize);
+      localStorage.setItem('surfDrumPrice', surfDrumPrice);
+      localStorage.setItem('scentDrumSize', scentDrumSize);
+      localStorage.setItem('scentDrumPrice', scentDrumPrice);
+
+      alert('Settings saved');
+      closeSettingsPage();
+    }
+
+    function parseRatio(input) {
+      if (!input) return 0;
+      const parts = input.split(':');
+      if (parts.length !== 2) return null;
+      const numerator = parseFloat(parts[0]);
+      const denominator = parseFloat(parts[1]);
+      if (isNaN(numerator) || isNaN(denominator) || denominator === 0) return null;
+      return numerator / denominator;
+    }
+
+    let lastResult = "";
+
+    function calculateMix() {
+      const batchSize = parseFloat(document.getElementById('batchSize').value); // Changed from "tankSize" to "batchSize"
+      const targetMix = parseFloat(document.getElementById('targetMix').value);
+      const shStrength = parseFloat(document.getElementById('shStrength').value || "12.5");
+      const surfRatioInput = document.getElementById('surfactantRatio').value;
+      const scentRatioInput = document.getElementById('scentRatio').value;
+      const resultDiv = document.getElementById('resultOutput');
+      const saveLogBtn = document.getElementById('saveLogBtn');
+
+      const surfRatio = parseRatio(surfRatioInput);
+      const scentRatio = scentRatioInput ? parseRatio(scentRatioInput) : 0;
+
+      if (surfRatio === null) {
+        resultDiv.innerText = "⚠️ Invalid surfactant ratio. Use format like 1:75.";
+        return;
+      }
+
+      if (scentRatioInput && scentRatio === null) {
+        resultDiv.innerText = "⚠️ Invalid scent ratio. Use format like 1:100.";
+        return;
+      }
+
+      if (adjustToggle.checked) {
+        const V1 = parseFloat(document.getElementById('currentVolume').value);
+        const C1 = parseFloat(document.getElementById('currentStrength').value);
+        const Ct = targetMix;
+        const C2 = shStrength;
+        const Vtotal = batchSize;
+
+        if (Ct >= C2 || isNaN(V1) || isNaN(C1) || isNaN(Vtotal)) {
+          resultDiv.innerText = "⚠️ Invalid adjustment input. Ensure target % < SH drum %, and all values are filled.";
+          return;
+        }
+
+        const V2 = Vtotal - V1;
+
+        const SH_total = (Ct / 100) * Vtotal;
+        const SH_existing = (C1 / 100) * V1;
+        const SH_needed = SH_total - SH_existing;
+
+        const shToAdd = SH_needed / (C2 / 100);
+        const waterToAdd = V2 - shToAdd;
+        const surfToAdd = V2 * surfRatio * 1000;
+        const scentToAdd = V2 * scentRatio * 1000;
+
+        lastResult = `🔄 Add to existing tank:\n• SH (from ${C2}% drum): ${shToAdd.toFixed(2)} L\n• Water: ${waterToAdd.toFixed(2)} L\n• Surfactant: ${surfToAdd.toFixed(0)} mL` + (scentRatio > 0 ? `\n• Scent: ${scentToAdd.toFixed(0)} mL` : '') + `\n📦 Final volume: ${Vtotal.toFixed(1)} L at ${Ct.toFixed(1)}%`;
+      } else {
+        const shRequired = (targetMix / shStrength) * batchSize;
+        const waterRequired = batchSize - shRequired;
+        const surfactantRequired = batchSize * surfRatio * 1000;
+        const scentRequired = batchSize * scentRatio * 1000;
+
+        lastResult = `🧪 Full Batch:\n• SH (from ${shStrength}% drum): ${shRequired.toFixed(2)} L\n• Water: ${waterRequired.toFixed(2)} L\n• Surfactant: ${surfactantRequired.toFixed(0)} mL` + (scentRatio > 0 ? `\n• Scent: ${scentRequired.toFixed(0)} mL` : '');
+      }
+
+      resultDiv.innerText = lastResult;
+
+      // Show Save to Log button
+      saveLogBtn.style.display = 'block';
+    }
+
+    function saveCostToLog() {
+      if (!lastResult) return;
+
+      const shDrumPrice = parseFloat(localStorage.getItem('shDrumPrice') || 0);
+      const surfDrumPrice = parseFloat(localStorage.getItem('surfDrumPrice') || 0);
+      const scentDrumPrice = parseFloat(localStorage.getItem('scentDrumPrice') || 0);
+
+      // Calculate cost of SH, Surfactant, and Scent
+      const costSH = parseFloat(lastResult.match(/SH \(from (\d+(\.\d+)?)% drum\): (\d+(\.\d+)?)/)?.[3]) * shDrumPrice;
+      const costSurf = parseFloat(lastResult.match(/Surfactant: (\d+(\.\d+)?)/)?.[1]) * surfDrumPrice;
+      const costScent = parseFloat(lastResult.match(/Scent: (\d+(\.\d+)?)/)?.[1]) * scentDrumPrice;
+
+      const totalCost = costSH + costSurf + costScent;
+
+      const costResultDiv = document.getElementById('costResult');
+      costResultDiv.innerText = `Total cost of mix: $${totalCost.toFixed(2)}`;
+
+      // Show Save Cost to Log button
+      document.querySelector('#costPage button').style.display = 'block';
+    }
+
+    function displayLog() {
+      const logs = JSON.parse(localStorage.getItem('softwashLogs') || '[]');
+      document.getElementById('logOutput').innerText = logs.join('\n\n');
+    }
+
+    function clearLog() {
+      if (confirm("Clear all logs?")) {
+        localStorage.removeItem('softwashLogs');
+        displayLog();
+      }
+    }
+  </script>
+</body>
+</html>
