@@ -94,34 +94,44 @@
     <button onclick="showSettingsPage()">Settings</button>
   </nav>
 
+  <!-- Settings Page -->
   <div id="settingsPage" class="settings-page">
     <h2>Settings</h2>
     <label for="shDrumSize">SH Drum Size (L):</label>
     <input type="number" id="shDrumSize" value="200" />
     <label for="shDrumPrice">Price per SH Drum ($):</label>
     <input type="number" id="shDrumPrice" value="120" />
+
     <label for="surfDrumSize">Surfactant Drum Size (L):</label>
     <input type="number" id="surfDrumSize" value="50" />
     <label for="surfDrumPrice">Price per Surfactant Drum ($):</label>
     <input type="number" id="surfDrumPrice" value="80" />
+
     <label for="scentDrumSize">Scent Drum Size (L):</label>
     <input type="number" id="scentDrumSize" value="25" />
     <label for="scentDrumPrice">Price per Scent Drum ($):</label>
     <input type="number" id="scentDrumPrice" value="60" />
+
     <button onclick="saveSettings()">Save Settings</button>
     <button onclick="closeSettingsPage()">Close</button>
   </div>
 
+  <!-- Calculator Page -->
   <div id="calcPage">
     <h1>Softwash Mix Calculator</h1>
+
     <label>Batch size (L):</label>
     <input type="number" id="batchSize" placeholder="e.g. 100" />
+
     <label>Target mix strength (%):</label>
     <input type="number" step="0.1" id="targetMix" placeholder="e.g. 3.5" />
+
     <label>SH drum strength (%):</label>
     <input type="number" step="0.1" id="shStrength" value="12.5" />
+
     <label>Surfactant ratio (e.g. 1:75):</label>
     <input type="text" id="surfactantRatio" placeholder="e.g. 1:75" />
+
     <label>Scent ratio (e.g. 1:100):</label>
     <input type="text" id="scentRatio" placeholder="e.g. 1:100" />
 
@@ -138,16 +148,19 @@
     </div>
 
     <button onclick="calculateMix()">Calculate Mix</button>
+
     <div class="output" id="resultOutput"></div>
     <button class="save-btn" id="saveLogBtn" onclick="promptSaveLog()">Save to Log</button>
   </div>
 
+  <!-- Log Page -->
   <div id="logPage" style="display:none;">
     <h2>Saved Logs</h2>
     <div class="log" id="logOutput"></div>
     <button onclick="clearLog()">Clear Log</button>
   </div>
 
+  <!-- Cost Calculator Page -->
   <div id="costPage" style="display:none;">
     <h1>Cost Calculator</h1>
     <div id="costResult" class="cost"></div>
@@ -182,9 +195,8 @@
     }
 
     function saveSettings() {
-      ['shDrumSize','shDrumPrice','surfDrumSize','surfDrumPrice','scentDrumSize','scentDrumPrice'].forEach(id => {
-        localStorage.setItem(id, document.getElementById(id).value);
-      });
+      const keys = ['shDrumSize','shDrumPrice','surfDrumSize','surfDrumPrice','scentDrumSize','scentDrumPrice'];
+      keys.forEach(id => localStorage.setItem(id, document.getElementById(id).value));
       alert('Settings saved');
       closeSettingsPage();
     }
@@ -205,24 +217,35 @@
       const batchSize = parseFloat(document.getElementById('batchSize').value);
       const targetMix = parseFloat(document.getElementById('targetMix').value);
       const shStrength = parseFloat(document.getElementById('shStrength').value || "12.5");
-      const surfRatio = parseRatio(document.getElementById('surfactantRatio').value);
-      const scentRatio = parseRatio(document.getElementById('scentRatio').value);
+      const surfRatioInput = document.getElementById('surfactantRatio').value;
+      const scentRatioInput = document.getElementById('scentRatio').value;
       const resultDiv = document.getElementById('resultOutput');
       const saveLogBtn = document.getElementById('saveLogBtn');
 
-      if (surfRatio === null || (document.getElementById('scentRatio').value && scentRatio === null)) {
-        resultDiv.innerText = "⚠️ Invalid ratio format.";
+      const surfRatio = parseRatio(surfRatioInput);
+      const scentRatio = scentRatioInput ? parseRatio(scentRatioInput) : 0;
+
+      if (surfRatio === null) {
+        resultDiv.innerText = "⚠️ Invalid surfactant ratio. Use format like 1:75.";
+        return;
+      }
+      if (scentRatioInput && scentRatio === null) {
+        resultDiv.innerText = "⚠️ Invalid scent ratio. Use format like 1:100.";
         return;
       }
 
       if (adjustToggle.checked) {
         const V1 = parseFloat(document.getElementById('currentVolume').value);
         const C1 = parseFloat(document.getElementById('currentStrength').value);
-        const Ct = targetMix, C2 = shStrength, Vtotal = batchSize;
+        const Ct = targetMix;
+        const C2 = shStrength;
+        const Vtotal = batchSize;
+
         if (Ct >= C2 || isNaN(V1) || isNaN(C1) || isNaN(Vtotal)) {
           resultDiv.innerText = "⚠️ Invalid adjustment input.";
           return;
         }
+
         const V2 = Vtotal - V1;
         const SH_total = (Ct / 100) * Vtotal;
         const SH_existing = (C1 / 100) * V1;
@@ -231,20 +254,28 @@
         const waterToAdd = V2 - shToAdd;
         const surfToAdd = V2 * surfRatio * 1000;
         const scentToAdd = V2 * scentRatio * 1000;
+
         lastResult = {
-          SH: shToAdd.toFixed(2), water: waterToAdd.toFixed(2),
-          surfactant: surfToAdd.toFixed(0), scent: scentToAdd.toFixed(0),
-          totalVolume: Vtotal.toFixed(1), totalMixStrength: Ct.toFixed(1)
+          SH: shToAdd.toFixed(2),
+          water: waterToAdd.toFixed(2),
+          surfactant: surfToAdd.toFixed(0),
+          scent: scentToAdd.toFixed(0),
+          totalVolume: Vtotal.toFixed(1),
+          totalMixStrength: Ct.toFixed(1)
         };
       } else {
         const shRequired = (targetMix / shStrength) * batchSize;
         const waterRequired = batchSize - shRequired;
         const surfactantRequired = batchSize * surfRatio * 1000;
         const scentRequired = batchSize * scentRatio * 1000;
+
         lastResult = {
-          SH: shRequired.toFixed(2), water: waterRequired.toFixed(2),
-          surfactant: surfactantRequired.toFixed(0), scent: scentRequired.toFixed(0),
-          totalVolume: batchSize.toFixed(1), totalMixStrength: targetMix.toFixed(1)
+          SH: shRequired.toFixed(2),
+          water: waterRequired.toFixed(2),
+          surfactant: surfactantRequired.toFixed(0),
+          scent: scentRequired.toFixed(0),
+          totalVolume: batchSize.toFixed(1),
+          totalMixStrength: targetMix.toFixed(1)
         };
       }
 
@@ -256,20 +287,13 @@
     }
 
     function saveCostToLog() {
-      const shDrumSize = parseFloat(localStorage.getItem('shDrumSize'));
-      const shDrumPrice = parseFloat(localStorage.getItem('shDrumPrice'));
-      const surfDrumSize = parseFloat(localStorage.getItem('surfDrumSize'));
-      const surfDrumPrice = parseFloat(localStorage.getItem('surfDrumPrice'));
-      const scentDrumSize = parseFloat(localStorage.getItem('scentDrumSize'));
-      const scentDrumPrice = parseFloat(localStorage.getItem('scentDrumPrice'));
+      const shCostPerLitre = parseFloat(localStorage.getItem('shDrumPrice')) / parseFloat(localStorage.getItem('shDrumSize'));
+      const surfCostPerLitre = parseFloat(localStorage.getItem('surfDrumPrice')) / parseFloat(localStorage.getItem('surfDrumSize'));
+      const scentCostPerLitre = parseFloat(localStorage.getItem('scentDrumPrice')) / parseFloat(localStorage.getItem('scentDrumSize'));
 
-      const shCostPerLitre = shDrumPrice / shDrumSize;
-      const surfCostPerLitre = surfDrumPrice / surfDrumSize;
-      const scentCostPerLitre = scentDrumPrice / scentDrumSize;
-
-      const costSH = parseFloat(lastResult.SH) * shCostPerLitre;
+      const costSH = parseFloat(lastResult.SH) * 1000 / 1000 * shCostPerLitre;
       const costSurf = parseFloat(lastResult.surfactant) / 1000 * surfCostPerLitre;
-      const costScent = parseFloat(lastResult.scent) / 1000 * scentCostPerLitre;
+      const costScent = parseFloat(lastResult.scent || 0) / 1000 * scentCostPerLitre;
 
       const totalCost = costSH + costSurf + costScent;
 
@@ -293,6 +317,13 @@
         localStorage.removeItem('softwashLogs');
         displayLog();
       }
+    }
+
+    function promptSaveLog() {
+      const logs = JSON.parse(localStorage.getItem('softwashLogs') || '[]');
+      logs.push(`Mix: SH=${lastResult.SH}L, Water=${lastResult.water}L, Surfactant=${lastResult.surfactant}mL, Scent=${lastResult.scent || 0}mL, Volume=${lastResult.totalVolume}L @ ${lastResult.totalMixStrength}%`);
+      localStorage.setItem('softwashLogs', JSON.stringify(logs));
+      alert('Mix saved to log');
     }
   </script>
 </body>
