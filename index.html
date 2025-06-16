@@ -59,14 +59,47 @@
     nav button {
       margin: 0 0.5rem;
     }
+    .settings-btn {
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      font-size: 24px;
+      background: none;
+      border: none;
+      cursor: pointer;
+    }
+    .settings-page {
+      display: none;
+      padding: 1rem;
+      background: #fff;
+      border-radius: 8px;
+      max-width: 400px;
+      margin: auto;
+    }
   </style>
 </head>
 <body>
+  <!-- Gear icon for settings -->
+  <button class="settings-btn" onclick="showSettingsPage()">⚙️</button>
+
   <nav>
     <button onclick="showPage('calc')">Calculator</button>
     <button onclick="showPage('log')">Log</button>
-    <button onclick="showPage('cost')">Cost Calculator</button> <!-- New Button for Cost Calculator -->
+    <button onclick="showPage('cost')">Cost Calculator</button>
   </nav>
+
+  <!-- Settings Page -->
+  <div id="settingsPage" class="settings-page">
+    <h2>Settings</h2>
+    <label for="shDrumSize">Drum Size (L):</label>
+    <input type="number" id="shDrumSize" value="200" />
+    
+    <label for="shDrumPrice">Price per Drum ($):</label>
+    <input type="number" id="shDrumPrice" value="120" />
+
+    <button onclick="saveSettings()">Save Settings</button>
+    <button onclick="closeSettingsPage()">Close</button>
+  </div>
 
   <!-- Calculator Page -->
   <div id="calcPage">
@@ -148,6 +181,25 @@
       document.getElementById('costPage').style.display = page === 'cost' ? 'block' : 'none'; // Show the cost calculator page
 
       if (page === 'log') displayLog();
+    }
+
+    function showSettingsPage() {
+      document.getElementById('settingsPage').style.display = 'block';
+    }
+
+    function closeSettingsPage() {
+      document.getElementById('settingsPage').style.display = 'none';
+    }
+
+    function saveSettings() {
+      const shDrumSize = document.getElementById('shDrumSize').value;
+      const shDrumPrice = document.getElementById('shDrumPrice').value;
+
+      localStorage.setItem('shDrumSize', shDrumSize);
+      localStorage.setItem('shDrumPrice', shDrumPrice);
+
+      alert('Settings saved');
+      closeSettingsPage();
     }
 
     function parseRatio(input) {
@@ -263,4 +315,3 @@
   </script>
 </body>
 </html>
-
