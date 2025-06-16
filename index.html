@@ -123,7 +123,7 @@
   <div id="calcPage">
     <h1>Softwash Mix Calculator</h1>
 
-    <label>Batch size (L):</label> <!-- Changed from "Tank size" to "Batch size" -->
+    <label>Batch size (L):</label>
     <input type="number" id="batchSize" placeholder="e.g. 100" />
 
     <label>Target mix strength (%):</label>
@@ -233,7 +233,7 @@
       return numerator / denominator;
     }
 
-    let lastResult = "";
+    let lastResult = {};
 
     function calculateMix() {
       const batchSize = parseFloat(document.getElementById('batchSize').value); // Changed from "tankSize" to "batchSize"
@@ -280,38 +280,56 @@
         const surfToAdd = V2 * surfRatio * 1000;
         const scentToAdd = V2 * scentRatio * 1000;
 
-        lastResult = `🔄 Add to existing tank:\n• SH (from ${C2}% drum): ${shToAdd.toFixed(2)} L\n• Water: ${waterToAdd.toFixed(2)} L\n• Surfactant: ${surfToAdd.toFixed(0)} mL` + (scentRatio > 0 ? `\n• Scent: ${scentToAdd.toFixed(0)} mL` : '') + `\n📦 Final volume: ${Vtotal.toFixed(1)} L at ${Ct.toFixed(1)}%`;
+        lastResult = {
+          SH: shToAdd.toFixed(2),
+          water: waterToAdd.toFixed(2),
+          surfactant: surfToAdd.toFixed(0),
+          scent: scentToAdd.toFixed(0),
+          totalVolume: Vtotal.toFixed(1),
+          totalMixStrength: Ct.toFixed(1)
+        };
       } else {
         const shRequired = (targetMix / shStrength) * batchSize;
         const waterRequired = batchSize - shRequired;
         const surfactantRequired = batchSize * surfRatio * 1000;
         const scentRequired = batchSize * scentRatio * 1000;
 
-        lastResult = `🧪 Full Batch:\n• SH (from ${shStrength}% drum): ${shRequired.toFixed(2)} L\n• Water: ${waterRequired.toFixed(2)} L\n• Surfactant: ${surfactantRequired.toFixed(0)} mL` + (scentRatio > 0 ? `\n• Scent: ${scentRequired.toFixed(0)} mL` : '');
+        lastResult = {
+          SH: shRequired.toFixed(2),
+          water: waterRequired.toFixed(2),
+          surfactant: surfactantRequired.toFixed(0),
+          scent: scentRequired.toFixed(0),
+          totalVolume: batchSize.toFixed(1),
+          totalMixStrength: targetMix.toFixed(1)
+        };
       }
 
-      resultDiv.innerText = lastResult;
+      resultDiv.innerText = `Mix Ready:\n• SH: ${lastResult.SH} L\n• Water: ${lastResult.water} L\n• Surfactant: ${lastResult.surfactant} mL` + (scentRatio > 0 ? `\n• Scent: ${lastResult.scent} mL` : '') + `\n📦 Final volume: ${lastResult.totalVolume} L at ${lastResult.totalMixStrength}%`;
 
       // Show Save to Log button
       saveLogBtn.style.display = 'block';
     }
 
     function saveCostToLog() {
-      if (!lastResult) return;
-
       const shDrumPrice = parseFloat(localStorage.getItem('shDrumPrice') || 0);
       const surfDrumPrice = parseFloat(localStorage.getItem('surfDrumPrice') || 0);
       const scentDrumPrice = parseFloat(localStorage.getItem('scentDrumPrice') || 0);
 
-      // Calculate cost of SH, Surfactant, and Scent
-      const costSH = parseFloat(lastResult.match(/SH \(from (\d+(\.\d+)?)% drum\): (\d+(\.\d+)?)/)?.[3]) * shDrumPrice;
-      const costSurf = parseFloat(lastResult.match(/Surfactant: (\d+(\.\d+)?)/)?.[1]) * surfDrumPrice;
-      const costScent = parseFloat(lastResult.match(/Scent: (\d+(\.\d+)?)/)?.[1]) * scentDrumPrice;
+      const costSH = parseFloat(lastResult.SH) * shDrumPrice;
+      const costSurf = parseFloat(lastResult.surfactant) / 1000 * surfDrumPrice; // Convert mL to L
+      const costScent = parseFloat(lastResult.scent) / 1000 * scentDrumPrice; // Convert mL to L
 
       const totalCost = costSH + costSurf + costScent;
 
       const costResultDiv = document.getElementById('costResult');
-      costResultDiv.innerText = `Total cost of mix: $${totalCost.toFixed(2)}`;
+      costResultDiv.innerText = `
+        Cost Breakdown:
+        SH: $${costSH.toFixed(2)}
+        Surfactant: $${costSurf.toFixed(2)}
+        Scent: $${costScent.toFixed(2)}
+        
+        Total Cost: $${totalCost.toFixed(2)}
+      `;
 
       // Show Save Cost to Log button
       document.querySelector('#costPage button').style.display = 'block';
