@@ -68,4 +68,45 @@
     function calculate() {
       const mixSize = parseFloat(document.getElementById('mixSize').value);
       const shRatio = parseFloat(document.getElementById('shRatio').value);
-      const surfRatio = parseFloat(document.getElementById('
+      const surfRatio = parseFloat(document.getElementById('surfRatio').value);
+      const scentMl = parseFloat(document.getElementById('scentMl').value);
+
+      const shDrumSize = parseFloat(document.getElementById('shDrumSize').value);
+      const shDrumPrice = parseFloat(document.getElementById('shDrumPrice').value);
+
+      const surfDrumSize = parseFloat(document.getElementById('surfDrumSize').value);
+      const surfDrumPrice = parseFloat(document.getElementById('surfDrumPrice').value);
+
+      const scentDrumSize = parseFloat(document.getElementById('scentDrumSize').value);
+      const scentDrumPrice = parseFloat(document.getElementById('scentDrumPrice').value);
+
+      // Chemical volumes in mL
+      const shVolume = mixSize * (shRatio / 100) * 1000;
+      const surfVolume = mixSize * (surfRatio / 100) * 1000;
+
+      // Per-litre prices
+      const shPerLitre = shDrumPrice / shDrumSize;
+      const surfPerLitre = surfDrumPrice / surfDrumSize;
+      const scentPerLitre = scentDrumPrice / scentDrumSize;
+
+      // Costs
+      const costSH = (shVolume / 1000) * shPerLitre;
+      const costSurf = (surfVolume / 1000) * surfPerLitre;
+      const costScent = (scentMl / 1000) * scentPerLitre;
+
+      const totalCost = costSH + costSurf + costScent;
+
+      document.getElementById('result').innerHTML = 
+        <strong>Results for ${mixSize}L Mix</strong><br><br>
+        SH Used: ${(shVolume / 1000).toFixed(2)} L — Cost: $${costSH.toFixed(2)}<br>
+        Surfactant Used: ${(surfVolume / 1000).toFixed(2)} L — Cost: $${costSurf.toFixed(2)}<br>
+        Scent Used: ${(scentMl / 1000).toFixed(2)} L — Cost: $${costScent.toFixed(2)}<br>
+        <br><strong>Total Cost: $${totalCost.toFixed(2)}</strong>
+      ;
+    }
+  </script>
+
+</body>
+</html>
+
+
