@@ -11,19 +11,15 @@
       margin: 0 auto;
       padding: 2rem;
     }
-    input, label {
+    input, select, button {
       display: block;
-      margin-bottom: 0.5rem;
+      margin-bottom: 1rem;
+      padding: 0.5rem;
       width: 100%;
     }
-    input {
-      padding: 0.5rem;
-    }
     .result {
-      background: #f9f9f9;
-      border: 1px solid #ccc;
+      background: #f4f4f4;
       padding: 1rem;
-      margin-top: 1rem;
       border-radius: 5px;
     }
   </style>
@@ -67,28 +63,32 @@
   <div class="result" id="result"></div>
 
   <script>
-    function calculateAndSave() {
-      const mixSize = parseFloat(document.getElementById('mixSize').value) || 0;
-      const shRatio = parseFloat(document.getElementById('shRatio').value) || 0;
-      const surfRatio = parseFloat(document.getElementById('surfRatio').value) || 0;
-      const scentMl = parseFloat(document.getElementById('scentMl').value) || 0;
+    // Function to calculate the cost automatically whenever any input changes
+    function calculate() {
+      const mixSize = parseFloat(document.getElementById('mixSize').value);
+      const shRatio = parseFloat(document.getElementById('shRatio').value);
+      const surfRatio = parseFloat(document.getElementById('surfRatio').value);
+      const scentMl = parseFloat(document.getElementById('scentMl').value);
 
-      const shDrumSize = parseFloat(document.getElementById('shDrumSize').value) || 1;
-      const shDrumPrice = parseFloat(document.getElementById('shDrumPrice').value) || 0;
+      const shDrumSize = parseFloat(document.getElementById('shDrumSize').value);
+      const shDrumPrice = parseFloat(document.getElementById('shDrumPrice').value);
 
-      const surfDrumSize = parseFloat(document.getElementById('surfDrumSize').value) || 1;
-      const surfDrumPrice = parseFloat(document.getElementById('surfDrumPrice').value) || 0;
+      const surfDrumSize = parseFloat(document.getElementById('surfDrumSize').value);
+      const surfDrumPrice = parseFloat(document.getElementById('surfDrumPrice').value);
 
-      const scentDrumSize = parseFloat(document.getElementById('scentDrumSize').value) || 1;
-      const scentDrumPrice = parseFloat(document.getElementById('scentDrumPrice').value) || 0;
+      const scentDrumSize = parseFloat(document.getElementById('scentDrumSize').value);
+      const scentDrumPrice = parseFloat(document.getElementById('scentDrumPrice').value);
 
-      const shVolume = mixSize * (shRatio / 100) * 1000;     // in mL
-      const surfVolume = mixSize * (surfRatio / 100) * 1000; // in mL
+      // Chemical volumes in mL
+      const shVolume = mixSize * (shRatio / 100) * 1000;
+      const surfVolume = mixSize * (surfRatio / 100) * 1000;
 
+      // Per-litre prices
       const shPerLitre = shDrumPrice / shDrumSize;
       const surfPerLitre = surfDrumPrice / surfDrumSize;
       const scentPerLitre = scentDrumPrice / scentDrumSize;
 
+      // Costs
       const costSH = (shVolume / 1000) * shPerLitre;
       const costSurf = (surfVolume / 1000) * surfPerLitre;
       const costScent = (scentMl / 1000) * scentPerLitre;
@@ -99,31 +99,18 @@
         <strong>Results for ${mixSize}L Mix</strong><br><br>
         SH Used: ${(shVolume / 1000).toFixed(2)} L — Cost: $${costSH.toFixed(2)}<br>
         Surfactant Used: ${(surfVolume / 1000).toFixed(2)} L — Cost: $${costSurf.toFixed(2)}<br>
-        Scent Used: ${(scentMl / 1000).toFixed(2)} L — Cost: $${costScent.toFixed(2)}<br><br>
-        <strong>Total Cost: $${totalCost.toFixed(2)}</strong>
+        Scent Used: ${(scentMl / 1000).toFixed(2)} L — Cost: $${costScent.toFixed(2)}<br>
+        <br><strong>Total Cost: $${totalCost.toFixed(2)}</strong>
       `;
-
-      // Update the latest entry in the mixCalculatorLog
-      let log = JSON.parse(localStorage.getItem('mixCalculatorLog')) || [];
-
-      if (log.length > 0) {
-        log[log.length - 1].costBreakdown = {
-          costSH: costSH.toFixed(2),
-          costSurfactant: costSurf.toFixed(2),
-          costScent: costScent.toFixed(2),
-          totalCost: totalCost.toFixed(2)
-        };
-        localStorage.setItem('mixCalculatorLog', JSON.stringify(log));
-      }
     }
 
-    // Recalculate + save on input
-    document.querySelectorAll('input').forEach(input => {
-      input.addEventListener('input', calculateAndSave);
+    // Automatically calculate when the input values change
+    document.querySelectorAll('input').forEach(inputElement => {
+      inputElement.addEventListener('input', calculate);
     });
 
-    // Run on page load
-    window.onload = calculateAndSave;
+    // Initial calculation when the page loads
+    window.onload = calculate;
   </script>
 
 </body>
