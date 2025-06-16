@@ -322,13 +322,13 @@
       const totalCost = costSH + costSurf + costScent;
 
       const costResultDiv = document.getElementById('costResult');
-      costResultDiv.innerText = `
-        Cost Breakdown:
-        SH: $${costSH.toFixed(2)}
-        Surfactant: $${costSurf.toFixed(2)}
-        Scent: $${costScent.toFixed(2)}
-        
-        Total Cost: $${totalCost.toFixed(2)}
+      costResultDiv.innerHTML = `
+        <h2>Cost Breakdown:</h2>
+        <p>• SH: $${costSH.toFixed(2)}</p>
+        <p>• Surfactant: $${costSurf.toFixed(2)}</p>
+        <p>• Scent: $${costScent.toFixed(2)}</p>
+        <hr />
+        <p><strong>Total Cost: $${totalCost.toFixed(2)}</strong></p>
       `;
 
       // Show Save Cost to Log button
